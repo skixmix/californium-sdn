@@ -338,6 +338,12 @@ public class BlockwiseLayer extends AbstractLayer {
 					assembled.setSenderIdentity(request.getSenderIdentity());
 					status.assembleMessage(assembled);
 
+					// make sure we deliver the request using the MID and token of the latest request
+					// so that the response created by the application layer can reply to his token and
+					// MID
+					assembled.setMID(request.getMID());
+					assembled.setToken(request.getToken());
+
 					// make sure peer's early negotiation of block2 size gets included
 					assembled.getOptions().setBlock2(request.getOptions().getBlock2());
 
@@ -806,10 +812,8 @@ public class BlockwiseLayer extends AbstractLayer {
 
 		if (exchange.isOfLocalOrigin()) {
 			return KeyUri.fromInboundResponse(exchange.getRequest().getURI(), response);
-//			return new KeyUri(exchange.getRequest().getURI(), response.getOptions(), response.getSource().getAddress(), response.getSourcePort());
 		} else {
 			return KeyUri.fromOutboundResponse(exchange.getRequest().getURI(), response);
-//			return new KeyUri(exchange.getRequest().getURI(), response.getOptions(), response.getDestination().getAddress(), response.getDestinationPort());
 		}
 	}
 

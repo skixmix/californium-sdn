@@ -73,6 +73,8 @@ public class BlockwiseServerSideTest {
 	private String respPayload;
 	private String reqtPayload;
 	private byte[] etag;
+	private Integer expectedMid;
+	private byte[] expectedToken;
 	private ServerBlockwiseInterceptor serverInterceptor = new ServerBlockwiseInterceptor();
 	private MessageExchangeStore exchangeStore;
 
@@ -92,6 +94,8 @@ public class BlockwiseServerSideTest {
 	public void setupEndpoints() throws Exception {
 
 		etag = null;
+		expectedMid = null;
+		expectedToken = null;
 		testResource = new TestResource(RESOURCE_PATH);
 		testResource.setObservable(true);
 		exchangeStore = new InMemoryMessageExchangeStore(CONFIG);
@@ -396,17 +400,20 @@ public class BlockwiseServerSideTest {
 	public void testSimpleAtomicBlockwisePUT() throws Exception {
 		System.out.println("Simple atomic blockwise PUT");
 		respPayload = generateRandomPayload(50);
-		byte[] tok = generateNextToken();
 		reqtPayload = generateRandomPayload(300);
 
+		byte[] tok = generateNextToken();
 		client.sendRequest(CON, PUT, tok, ++mid).path(RESOURCE_PATH).block1(0, true, 128).size1(reqtPayload.length()).payload(reqtPayload.substring(0, 128)).go();
 		client.expectResponse(ACK, CONTINUE, tok, mid).block1(0, true, 128).payload("").go();
 
+		tok = generateNextToken();
 		client.sendRequest(CON, PUT, tok, ++mid).path(RESOURCE_PATH).block1(1, true, 128).payload(reqtPayload.substring(128, 256)).go();
 		client.expectResponse(ACK, CONTINUE, tok, mid).block1(1, true, 128).payload("").go();
 
-		client.sendRequest(CON, PUT, tok, ++mid).path(RESOURCE_PATH).block1(2, false, 128).payload(reqtPayload.substring(256)).go();
-		client.expectResponse(ACK, CHANGED, tok, mid).block1(2, false, 128).payload(respPayload).go();
+		expectedToken = generateNextToken();
+		expectedMid = ++mid;
+		client.sendRequest(CON, PUT, expectedToken, expectedMid).path(RESOURCE_PATH).block1(2, false, 128).payload(reqtPayload.substring(256)).go();
+		client.expectResponse(ACK, CHANGED, expectedToken, expectedMid).block1(2, false, 128).payload(respPayload).go();
 	}
 
 	@Test
@@ -789,6 +796,12 @@ public class BlockwiseServerSideTest {
 
 		public void handlePUT(final CoapExchange exchange) {
 			assertThat("server did not receive expected request payload", exchange.getRequestText(), is(reqtPayload));
+			if (expectedMid != null) {
+				assertThat("request did not contain expected MID", exchange.advanced().getRequest().getMID(), is(expectedMid));
+			}
+			if (expectedToken != null) {
+				assertThat("request did not contain expected token", exchange.advanced().getRequest().getToken(), is(expectedToken));
+			}
 			exchange.respond(ResponseCode.CHANGED, respPayload);
 		}
 
