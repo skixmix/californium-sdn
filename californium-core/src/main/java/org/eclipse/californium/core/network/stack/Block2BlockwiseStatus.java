@@ -47,7 +47,7 @@ final class Block2BlockwiseStatus extends BlockwiseStatus {
 		super(contentFormat, 0, 0);
 	}
 
-	private Block2BlockwiseStatus(final int contentFormat, final int bufferSize) {
+	private Block2BlockwiseStatus(final int bufferSize, final int contentFormat) {
 		super(bufferSize, contentFormat);
 	}
 
@@ -88,7 +88,7 @@ final class Block2BlockwiseStatus extends BlockwiseStatus {
 		if (block.getOptions().hasSize2()) {
 			bufferSize = block.getOptions().getSize2();
 		}
-		Block2BlockwiseStatus status = new Block2BlockwiseStatus(contentFormat, bufferSize);
+		Block2BlockwiseStatus status = new Block2BlockwiseStatus(bufferSize, contentFormat);
 		status.setFirst(block);
 		Integer observeCount = block.getOptions().getObserve();
 		if (observeCount != null && OptionSet.isValidObserveOption(observeCount)) {
@@ -113,7 +113,7 @@ final class Block2BlockwiseStatus extends BlockwiseStatus {
 	 */
 	static Block2BlockwiseStatus forRandomAccessRequest(final Exchange exchange, final Request request, final BlockOption block2) {
 		int contentFormat = request.getOptions().getContentFormat();
-		Block2BlockwiseStatus status = new Block2BlockwiseStatus(contentFormat, 0);
+		Block2BlockwiseStatus status = new Block2BlockwiseStatus(0, contentFormat);
 		status.randomAccess = true;
 		status.setCurrentNum(block2.getNum());
 		status.setCurrentSzx(block2.getSzx());

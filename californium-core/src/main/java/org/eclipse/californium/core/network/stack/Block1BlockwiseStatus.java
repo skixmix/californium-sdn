@@ -33,7 +33,7 @@ final class Block1BlockwiseStatus extends BlockwiseStatus {
 		super(contentFormat, 0, 0);
 	}
 
-	private Block1BlockwiseStatus(final int contentFormat, final int bufferSize) {
+	private Block1BlockwiseStatus(final int bufferSize, final int contentFormat) {
 		super(bufferSize, contentFormat);
 	}
 
@@ -66,7 +66,7 @@ final class Block1BlockwiseStatus extends BlockwiseStatus {
 		if (block.getOptions().hasSize1()) {
 			bufferSize = block.getOptions().getSize1();
 		}
-		Block1BlockwiseStatus status = new Block1BlockwiseStatus(contentFormat, bufferSize);
+		Block1BlockwiseStatus status = new Block1BlockwiseStatus(bufferSize, contentFormat);
 		status.setFirst(block);
 		return status;
 	}
