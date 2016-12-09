@@ -49,7 +49,7 @@ abstract class BlockwiseStatus {
 	 * last block arrives (block-14).
 	 */
 	protected int observe = NO_OBSERVE;
-	protected ByteBuffer buf;
+	protected final ByteBuffer buf;
 
 	private ScheduledFuture<?> cleanUpTask;
 	private Message first;
@@ -71,13 +71,15 @@ abstract class BlockwiseStatus {
 
 	/**
 	 * Creates a new blockwise status.
-	 *
+	 * <p>
+	 * This constructor also sets the maximum size of the body to be buffered to 0.
+	 * 
 	 * @param contentFormat The Content-Format of the body.
 	 * @param num The initial block number.
 	 * @param szx The initial block size code.
 	 */
 	protected BlockwiseStatus(final int contentFormat, final int num, final int szx) {
-		this.contentFormat = contentFormat;
+		this(0, contentFormat);
 		this.currentNum = num;
 		this.currentSzx = szx;
 	}
@@ -205,7 +207,7 @@ abstract class BlockwiseStatus {
 	 * @return The capacity in bytes.
 	 */
 	final synchronized int getBufferSize() {
-		return buf != null ? buf.capacity() : 0;
+		return buf.capacity();
 	}
 
 	/**

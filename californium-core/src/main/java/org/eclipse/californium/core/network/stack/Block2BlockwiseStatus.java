@@ -15,7 +15,6 @@
  ******************************************************************************/
 package org.eclipse.californium.core.network.stack;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,9 +61,8 @@ final class Block2BlockwiseStatus extends BlockwiseStatus {
 	 * @return The tracker.
 	 */
 	static Block2BlockwiseStatus forOutboundResponse(final Exchange exchange, final Response response, final int preferredBlockSize) {
-		Block2BlockwiseStatus status = new Block2BlockwiseStatus(response.getOptions().getContentFormat());
+		Block2BlockwiseStatus status = new Block2BlockwiseStatus(response.getPayloadSize(), response.getOptions().getContentFormat());
 		status.response = response;
-		status.buf = ByteBuffer.allocate(response.getPayloadSize());
 		status.buf.put(response.getPayload());
 		status.buf.flip();
 		if (response.isNotification()) {
@@ -233,7 +231,7 @@ final class Block2BlockwiseStatus extends BlockwiseStatus {
 			block.getOptions().setSize2(response.getPayloadSize());
 		}
 
-		int bodySize = buf.capacity();
+		int bodySize = getBufferSize();
 		int currentSize = BlockOption.szx2Size(getCurrentSzx());
 		int from = getCurrentNum() * currentSize;
 		boolean m = false;
