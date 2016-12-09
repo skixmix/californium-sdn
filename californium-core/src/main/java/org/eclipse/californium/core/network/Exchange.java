@@ -139,7 +139,7 @@ public class Exchange {
 	// first block piggy-backed with the Block1 option of the last request block
 	private BlockOption block1ToAck;
 
-	private Integer observeNo;
+	private Integer notificationNumber;
 
 	// The relation that the target resource has established with the source
 	private ObserveRelation relation;
@@ -392,12 +392,13 @@ public class Exchange {
 	 * transfer triggered by a notification.
 	 * 
 	 * @param notificationNo The observe number of the notification.
+	 * @throws IllegalArgumentException if the given number is &lt; 0 or &gt; 2^24 - 1.
 	 */
 	public synchronized void setNotificationNumber(final int notificationNo) {
 		if (notificationNo < 0 || notificationNo > MAX_OBSERVE_NO) {
 			throw new IllegalArgumentException("illegal observe number");
 		}
-		this.observeNo = notificationNo;
+		this.notificationNumber = notificationNo;
 	}
 
 	/**
@@ -410,7 +411,7 @@ public class Exchange {
 	 *         exchange is not associated with a notification.
 	 */
 	public synchronized Integer getNotificationNumber() {
-		return observeNo;
+		return notificationNumber;
 	}
 
 	public void setObserver(ExchangeObserver observer) {
