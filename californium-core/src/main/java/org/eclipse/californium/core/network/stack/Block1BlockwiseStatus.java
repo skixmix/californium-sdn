@@ -29,10 +29,6 @@ final class Block1BlockwiseStatus extends BlockwiseStatus {
 
 	private Request request;
 
-	private Block1BlockwiseStatus(final int contentFormat) {
-		super(contentFormat, 0, 0);
-	}
-
 	private Block1BlockwiseStatus(final int bufferSize, final int contentFormat) {
 		super(bufferSize, contentFormat);
 	}
@@ -46,7 +42,7 @@ final class Block1BlockwiseStatus extends BlockwiseStatus {
 	 * @return The tracker.
 	 */
 	static Block1BlockwiseStatus forOutboundRequest(final Exchange exchange, final Request request, final int preferredBlockSize) {
-		Block1BlockwiseStatus status = new Block1BlockwiseStatus(request.getOptions().getContentFormat());
+		Block1BlockwiseStatus status = new Block1BlockwiseStatus(0, request.getOptions().getContentFormat());
 		status.request = request;
 		status.setCurrentSzx(BlockOption.size2Szx(preferredBlockSize));
 		return status;
