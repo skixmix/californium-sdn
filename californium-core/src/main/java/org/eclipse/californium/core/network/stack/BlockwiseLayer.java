@@ -784,15 +784,10 @@ public class BlockwiseLayer extends AbstractLayer {
 			} else {
 
 				// ERROR, wrong block number (server error)
-				// TODO: This scenario is not specified in the draft.
 				// Canceling the request would interfere with Observe, so just ignore it
 				LOGGER.log(Level.WARNING,
-						"received wrong block, expected no. {0} but got {1}: {2}",
+						"ignoring block2 response with wrong block number {1} (expected {0}): {2}",
 						new Object[]{status.getCurrentNum(), block2.getNum(), response});
-				if (response.getType()==Type.CON) {
-					EmptyMessage rst = EmptyMessage.newRST(response);
-					lower().sendEmptyMessage(exchange, rst);
-				}
 			}
 		}
 	}
