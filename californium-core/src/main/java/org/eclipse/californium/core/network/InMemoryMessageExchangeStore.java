@@ -200,14 +200,14 @@ public class InMemoryMessageExchangeStore implements MessageExchangeStore {
 		KeyToken idByToken;
 		synchronized (exchangesByToken) {
 			if (request.getToken() == null) {
-				idByToken = tokenProvider.getUnusedToken(request);								
+				idByToken = tokenProvider.getUnusedToken(request);
 				request.setToken(idByToken.getToken());
 			} else {
 				idByToken = KeyToken.fromOutboundMessage(request);
 				// ongoing requests may reuse token
 				if (!(exchange.getFailedTransmissionCount() > 0 || request.getOptions().hasBlock1() || request.getOptions()
 						.hasBlock2() || request.getOptions().hasObserve()) && tokenProvider.isTokenInUse(idByToken)) {
-					LOGGER.log(Level.WARNING, "Manual token overrides existing open request: {0}", idByToken);					
+					LOGGER.log(Level.WARNING, "Manual token overrides existing open request: {0}", idByToken);
 				}
 			}
 			exchangesByToken.put(idByToken, exchange);
