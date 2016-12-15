@@ -653,9 +653,9 @@ public class BlockwiseLayer extends AbstractLayer {
 			// In order to be able to distinguish between a block of an old vs a new notification,
 			// the Exchange used to initially create the Block2BlockwiseStatus is
 			// marked with the notification's observe option (see Block2BlockwiseStatus.forInboundResponse()).
-			// We can then compare the observe option value from the Exchange that hasa been looked up
+			// We can then compare the observe option value from the Exchange that has been looked up
 			// for the incoming response with the value of the most recently received notification from the
-			// Block2BlockwiseStatus that has been looke up for the key.
+			// Block2BlockwiseStatus that has been looked up for the key.
 
 			if (exchange.getNotificationNumber() != null && exchange.getNotificationNumber() != status.getObserve()) {
 
