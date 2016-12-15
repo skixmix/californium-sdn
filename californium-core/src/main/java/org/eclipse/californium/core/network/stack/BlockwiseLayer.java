@@ -626,7 +626,7 @@ public class BlockwiseLayer extends AbstractLayer {
 
 			Block2BlockwiseStatus status = getInboundBlock2Status(key, exchange, response);
 
-			if (status.isInterferingNotification(response, block2)) {
+			if (status.isInterferingNotification(response)) {
 
 				// a new notification has arrived
 
@@ -680,7 +680,7 @@ public class BlockwiseLayer extends AbstractLayer {
 					clearBlock2Status(key);
 					upper().receiveResponse(exchange, response);
 
-				} else if (!status.addBlock(response, block2)) {
+				} else if (!status.addBlock(response)) {
 
 					LOGGER.log(Level.FINE, "cannot process payload of block2 response, aborting request");
 					exchange.getRequest().cancel();

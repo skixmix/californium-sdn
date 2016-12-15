@@ -127,12 +127,22 @@ final class Block2BlockwiseStatus extends BlockwiseStatus {
 	 * blockwise transfer.
 	 * 
 	 * @param responseBlock The response block to check.
-	 * @param block2 The block2 option from the response.
 	 * @return {@code true} if the response is a new notification and this transfer's
 	 *         current block number is &gt; 0.
+	 * @throws NullPointerException if the response block is {@code null}.
+	 * @throws IllegalArgumentException if the response block has no block2 option.
 	 */
-	synchronized boolean isInterferingNotification(final Response responseBlock, final BlockOption block2) {
-		return responseBlock.isNotification() && block2.getNum() == 0 && getCurrentNum() > 0;
+	synchronized boolean isInterferingNotification(final Response responseBlock) {
+		if (responseBlock == null) {
+			throw new NullPointerException("response block must not be null");
+		} else {
+			BlockOption block2 = responseBlock.getOptions().getBlock2();
+			if (block2 == null) {
+				throw new IllegalArgumentException("response has no block2 option");
+			} else {
+				return responseBlock.isNotification() && block2.getNum() == 0 && getCurrentNum() > 0;
+			}
+		}
 	}
 
 	/**
@@ -141,24 +151,39 @@ final class Block2BlockwiseStatus extends BlockwiseStatus {
 	 * @param responseBlock The incoming response.
 	 * @param block2 The block2 option contained in the response.
 	 * @return {@code true} if the payload could be added.
+	 * @throws NullPointerException if response block is {@code null}.
+	 * @throws IllegalArgumentException if the response block has no block2 option.
 	 */
-	synchronized boolean addBlock(final Response responseBlock, final BlockOption block2) {
-		if (etag != null) {
-			// response must contain the same ETag
-			if (responseBlock.getOptions().getETagCount() != 1) {
-				LOGGER.log(Level.FINE, "response does not contain a single ETag");
-				return false;
-			} else if (!Arrays.equals(etag, responseBlock.getOptions().getETags().get(0))) {
-				LOGGER.log(Level.FINE, "response does not contain expected ETag");
-				return false;
+	synchronized boolean addBlock(final Response responseBlock) {
+
+		if (responseBlock == null) {
+			throw new NullPointerException("response block must not be null");
+		} else {
+
+			final BlockOption block2 = responseBlock.getOptions().getBlock2();
+
+			if (block2 == null) {
+				throw new IllegalArgumentException("response block has no block2 option");
+			} else {
+				if (etag != null) {
+					// response must contain the same ETag
+					if (responseBlock.getOptions().getETagCount() != 1) {
+						LOGGER.log(Level.FINE, "response does not contain a single ETag");
+						return false;
+					} else if (!Arrays.equals(etag, responseBlock.getOptions().getETags().get(0))) {
+						LOGGER.log(Level.FINE, "response does not contain expected ETag");
+						return false;
+					}
+				}
+				boolean succeeded = addBlock(responseBlock.getPayload());
+				if (succeeded) {
+					setCurrentNum(block2.getNum());
+					setCurrentSzx(block2.getSzx());
+				}
+				return succeeded;
 			}
 		}
-		boolean succeeded = addBlock(responseBlock.getPayload());
-		if (succeeded) {
-			setCurrentNum(block2.getNum());
-			setCurrentSzx(block2.getSzx());
-		}
-		return succeeded;
+
 	}
 
 	/**
