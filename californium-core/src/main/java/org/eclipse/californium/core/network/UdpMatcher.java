@@ -352,15 +352,15 @@ public final class UdpMatcher extends BaseMatcher {
 					// need to try to remove its corresponding exchange from the store.
 				} else {
 					// in case an empty ACK was lost
-					KeyMID idByMID = KeyMID.fromOutboundMessage(exchange.getCurrentRequest());
+					KeyMID idByMID = KeyMID.fromOutboundMessage(originRequest);
 					exchangeStore.remove(idByMID);
 				}
 				KeyToken idByToken = KeyToken.fromOutboundMessage(originRequest);
 				exchangeStore.remove(idByToken);
-				if(!exchange.getCurrentRequest().getOptions().hasObserve()) {
+				if(!originRequest.getOptions().hasObserve()) {
 					exchangeStore.releaseToken(idByToken);
 				}
-				LOGGER.log(Level.FINER, "Exchange [{0}, {1}] completed", new Object[]{idByToken, exchange.getOrigin()});
+				LOGGER.log(Level.FINER, "Exchange [{0}, origin: {1}] completed", new Object[]{idByToken, exchange.getOrigin()});
 
 			} else { // Origin.REMOTE
 				// this endpoint created the Exchange to respond to a request
