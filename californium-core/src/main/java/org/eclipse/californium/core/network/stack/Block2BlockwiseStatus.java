@@ -38,14 +38,6 @@ final class Block2BlockwiseStatus extends BlockwiseStatus {
 	private Response response;
 	private byte[] etag;
 
-	/**
-	 * @param maxSize
-	 * @param contentFormat
-	 */
-	private Block2BlockwiseStatus(final int contentFormat) {
-		super(contentFormat, 0, 0);
-	}
-
 	private Block2BlockwiseStatus(final int bufferSize, final int contentFormat) {
 		super(bufferSize, contentFormat);
 	}
