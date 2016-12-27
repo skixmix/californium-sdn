@@ -9,6 +9,9 @@ import org.eclipse.californium.core.server.resources.CoapExchange;
 import co.nstant.in.cbor.CborDecoder;
 import co.nstant.in.cbor.CborException;
 import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.Map;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
 
 import org.eclipse.californium.core.coap.CoAP.ResponseCode;
 
@@ -37,10 +40,11 @@ public class NetworkResource extends CoapResource{
     public void handlePOST(CoapExchange exchange) {
         String value;
         byte[] payload;
-        System.out.println("Received request from: " + exchange.getSourceAddress());
-       
+        ByteString str;
+        System.out.print("Received request from: " + exchange.getSourceAddress());
+        System.out.println(" mac = " + exchange.getQueryParameter("mac"));
         payload = exchange.getRequestPayload();
-        System.out.println(bytesToHex(payload));
+        //System.out.println(bytesToHex(payload));
         ByteArrayInputStream bais = new ByteArrayInputStream(payload);
         List<DataItem> dataItems = null;
 		try {
@@ -50,9 +54,23 @@ public class NetworkResource extends CoapResource{
 			e.printStackTrace();
 		}
     	System.out.println("CBOR DECODED:");
-        for(DataItem dataItem : dataItems) {
-        	System.out.println(dataItem.toString());
+    	DataItem arrayItem = dataItems.get(0);
+    	Array array = (Array)arrayItem;
+    	
+        for(DataItem dataItem : array.getDataItems()) {
+        	System.out.print("TYPE = " + dataItem.getMajorType().getValue() + " ");
+        	if(dataItem.getMajorType().getValue() == 5){
+        		Map map = (Map) dataItem;
+        		System.out.println("MAP:");
+        		for(DataItem key : map.getKeys()){
+        			ByteString bytes = (ByteString) key;
+        			System.out.print(bytesToHex(bytes.getBytes()) + " -> " + map.get(key));
+        		}
+        	}
+        	else
+        		System.out.println(dataItem);
         }
+        exchange.respond(ResponseCode.CHANGED);
     }
 	
 	public static String bytesToHex(byte[] in) {
