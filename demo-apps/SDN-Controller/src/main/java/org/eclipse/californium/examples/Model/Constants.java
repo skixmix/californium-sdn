@@ -1,7 +1,7 @@
-package org.eclipse.californium.examples;
+package org.eclipse.californium.examples.Model;
 
 public class Constants {
-	public enum Actions{
+	public enum TypeOfAction{
 		FORWARD(1),
 	    DROP(2),
 	    MODIFY(3),
@@ -11,7 +11,7 @@ public class Constants {
 	    TO_UPPER_L(7);
 	    
 	    private final int id;
-		Actions(int id) { this.id = id; }
+		TypeOfAction(int id) { this.id = id; }
 	    public int getValue() { return id; }
 	};
 	public enum Fields{
