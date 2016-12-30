@@ -1,4 +1,4 @@
-package org.eclipse.californium.examples;
+package org.eclipse.californium.examples.Model;
 
 import java.util.Arrays;
 
