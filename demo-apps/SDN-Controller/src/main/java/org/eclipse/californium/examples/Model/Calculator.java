@@ -1,8 +1,5 @@
-<<<<<<< HEAD
 package org.eclipse.californium.examples.Model;
-=======
-package org.eclipse.californium.examples;
->>>>>>> branch 'master' of https://github.com/BigMikes/californium.git
+
 
 import java.util.Arrays;
 
