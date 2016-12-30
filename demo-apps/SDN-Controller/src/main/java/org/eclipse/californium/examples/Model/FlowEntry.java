@@ -83,7 +83,7 @@ public class FlowEntry {
 		ArrayBuilder<ArrayBuilder<ArrayBuilder<CborBuilder>>> support = array.addArray()
 			.add(this.priority)
 			.add(this.ttl)
-			.add(this.count)
+			//.add(this.count)
 			.addArray();
 		for(Rule rule: rules){
 			rule.toCbor(support);
