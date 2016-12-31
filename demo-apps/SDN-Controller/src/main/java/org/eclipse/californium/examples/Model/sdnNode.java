@@ -85,7 +85,7 @@ public class sdnNode {
 
 
 	public Neighbour getNeighbor(int i){
-		String[] keys = (String[])neighbours.keySet().toArray();
+		Object[] keys = neighbours.keySet().toArray();
 		return neighbours.get(keys[i]);
 	}
 

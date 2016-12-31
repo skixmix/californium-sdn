@@ -66,9 +66,11 @@ public class FlowEngineResource extends CoapResource {
 		String src = exchange.getQueryParameter("mac");
 		String dst = null;
 		//exchange.accept();
+		/*
 		if(exchange.getQueryParameter("mac").equals(new String("0002000200020002")) )
 			exchange.respond(ResponseCode.CHANGED, cborEncoding);
 		else
+		*/
 			exchange.respond(ResponseCode.CHANGED);
 
 		System.out.println("Received request " + counter +" from: " + exchange.getSourceAddress());
@@ -85,7 +87,10 @@ public class FlowEngineResource extends CoapResource {
 
         dst = bytesToHex(packet.getFinalAddress());
 		dijkstra.init(NetworkResource.getGraph());
-		dijkstra.setSource(NetworkResource.getNode(src));
+		Node source = NetworkResource.getNode(src);
+		if(source == null)
+			return;
+		dijkstra.setSource(source);
 		dijkstra.compute();
 		System.out.println("PATH:");
 		for (Node node : dijkstra.getPathNodes(NetworkResource.getNode(dst))){
