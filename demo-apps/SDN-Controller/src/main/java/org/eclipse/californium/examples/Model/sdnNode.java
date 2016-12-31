@@ -5,18 +5,9 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-public class Node {
-	class Neighbour{
-		Node node;
-		int rssi;
-		int etx;
-		
-		public Neighbour(Node n, int rssi, int etx){
-			this.node = n;
-			this.rssi = rssi;
-			this.etx = etx;
-		}
-	}
+
+public class sdnNode {
+
 	private String address;
 	private int version;
 	private int batteryLevel;
@@ -24,13 +15,13 @@ public class Node {
 	private long lastUpdate;
 	private Hashtable<String, Neighbour> neighbours;
 	
-	public Node(String address){
+	public sdnNode(String address){
 		this.address = address;
 		neighbours = new Hashtable<>();
 		this.lastUpdate = new Date(System.currentTimeMillis()).getTime();
 	}
 	
-	public Node(String address, int version, int batteryLevel, int queueUtilization) {
+	public sdnNode(String address, int version, int batteryLevel, int queueUtilization) {
 		this.address = address;
 		this.version = version;
 		this.batteryLevel = batteryLevel;
@@ -38,7 +29,7 @@ public class Node {
 		neighbours = new Hashtable<>();
 		this.lastUpdate = new Date(System.currentTimeMillis()).getTime();
 	}
-	public void addNeighbour(Node neighbour, int rssi, int etx){
+	public void addNeighbour(sdnNode neighbour, int rssi, int etx){
 		Neighbour n;
 		if(neighbours.containsKey(neighbour.getAddress())){
 			n = neighbours.get(neighbour.getAddress());
@@ -84,9 +75,24 @@ public class Node {
 		this.neighbours = neighbours;
 	}
 
+	public long getLastUpdate() {
+		return lastUpdate;
+	}
+
+	public int getNeighboursSize(){
+		return neighbours.size();
+	}
+
+
+	public Neighbour getNeighbor(int i){
+		String[] keys = (String[])neighbours.keySet().toArray();
+		return neighbours.get(keys[i]);
+	}
+
+
 	@Override
 	public String toString() {
-		String ret = "Node [address=" + address + ", version=" + version + ", batteryLevel=" + batteryLevel
+		String ret = "sdnNode [address=" + address + ", version=" + version + ", batteryLevel=" + batteryLevel
 				+ ", queueUtilization=" + queueUtilization + ", lastUpdate=" + lastUpdate; 
 		
 		ret += "\nneighbours:";
@@ -102,6 +108,28 @@ public class Node {
 		return ret;
 	}
 	
-	
-	
+
+	public class Neighbour{
+		sdnNode sdnNode;
+		int rssi;
+		int etx;
+
+		public Neighbour(sdnNode n, int rssi, int etx){
+			this.sdnNode = n;
+			this.rssi = rssi;
+			this.etx = etx;
+		}
+		public String getAddress(){
+			return sdnNode.getAddress();
+		}
+
+		public int getRssi() {
+			return rssi;
+		}
+
+		public int getEtx() {
+			return etx;
+		}
+	}
+
 }

@@ -13,16 +13,20 @@ import org.eclipse.californium.examples.Model.Constants.Operators;
 import org.eclipse.californium.examples.Model.Constants.TypeOfAction;
 
 import co.nstant.in.cbor.CborException;
+import org.graphstream.algorithm.Dijkstra;
+import org.graphstream.graph.Node;
 
 public class FlowEngineResource extends CoapResource {
 	private int counter = 0;
 	private byte[] cborEncoding = null;
+	private final Dijkstra dijkstra;
 	
 	public FlowEngineResource() {
 		super("Flow_engine");
 		// set display name
         getAttributes().setTitle("Flow_engine");
-        
+		dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "length");
+
         byte[] FinalAddress4 = {0x00,0x04,0x00,0x04,0x00,0x04,0x00,0x04};
         byte[] FinalAddress5 = {0x00,0x05,0x00,0x05,0x00,0x05,0x00,0x05};
         byte[] NextHopAddress = {0x00,0x03,0x00,0x03,0x00,0x03,0x00,0x03};
@@ -59,11 +63,14 @@ public class FlowEngineResource extends CoapResource {
 		byte[] payload;
 		SixLoWPANPacket packet;
 		counter++;
+		String src = exchange.getQueryParameter("mac");
+		String dst = null;
 		//exchange.accept();
 		if(exchange.getQueryParameter("mac").equals(new String("0002000200020002")) )
 			exchange.respond(ResponseCode.CHANGED, cborEncoding);
 		else
 			exchange.respond(ResponseCode.CHANGED);
+
 		System.out.println("Received request " + counter +" from: " + exchange.getSourceAddress());
         System.out.println(" type = " + exchange.getQueryParameter("type"));
         System.out.println(" mac = " + exchange.getQueryParameter("mac"));
@@ -75,7 +82,15 @@ public class FlowEngineResource extends CoapResource {
         System.out.println("\tFA = " + bytesToHex(packet.getFinalAddress()));
         System.out.println("\tOA = " + bytesToHex(packet.getOriginatorAddress()));
         System.out.println("\tFirst = " + packet.isFragmentationFirstHeader() + " FRAG = " + packet.getDatagramTag()+ " OFFSET = " + packet.getDatagramOffset());
-        
+
+        dst = bytesToHex(packet.getFinalAddress());
+		dijkstra.init(NetworkResource.getGraph());
+		dijkstra.setSource(NetworkResource.getNode(src));
+		dijkstra.compute();
+		System.out.println("PATH:");
+		for (Node node : dijkstra.getPathNodes(NetworkResource.getNode(dst))){
+			System.out.println(node.getId());
+		}
 	}
 	
 	
