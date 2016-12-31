@@ -89,7 +89,7 @@ public class Node {
 		String ret = "Node [address=" + address + ", version=" + version + ", batteryLevel=" + batteryLevel
 				+ ", queueUtilization=" + queueUtilization + ", lastUpdate=" + lastUpdate; 
 		
-		ret += "\nneighbours:";
+		ret += "\nNeighbours:";
 		String key;
         Neighbour n;
         Enumeration keys = neighbours.keys();
