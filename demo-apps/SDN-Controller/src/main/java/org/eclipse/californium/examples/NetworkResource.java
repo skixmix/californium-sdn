@@ -66,59 +66,61 @@ public class NetworkResource extends CoapResource{
         payload = exchange.getRequestPayload();
         //System.out.println(bytesToHex(payload));	//Debug
 		//Decode the Cbor structure
-        ByteArrayInputStream bais = new ByteArrayInputStream(payload);
-        List<DataItem> dataItems = null;
-		try {
-			dataItems = new CborDecoder(bais).decode();
-		} catch (CborException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			exchange.respond(ResponseCode.BAD_REQUEST);
-			return;
-		}
-		//The very beginning of the Cbor structure is an array of data items
-    	DataItem arrayItem = dataItems.get(0);
-    	Array array = (Array)arrayItem;
-    	dataItems = array.getDataItems();
-    	//Retrieve the information related to the sending sdnNode
-    	UnsignedInteger version = (UnsignedInteger)dataItems.get(0);		//Version
-    	UnsignedInteger battery = (UnsignedInteger)dataItems.get(1);		//Battery level (percentage)
-    	UnsignedInteger queueUtil = (UnsignedInteger)dataItems.get(2);		//Queue utilization
-    	//Check if the sdnNode is already present into the hash table
-    	if(nodes.containsKey(address)){
-    		//If so, just update its statistics
-    		sdnNode = nodes.get(address);
-    		sdnNode.updateInfo(version.getValue().intValue(), battery.getValue().intValue(), queueUtil.getValue().intValue());
-    	}
-    	else{
-    		//Otherwise, create a new sdnNode object and insert it into the hash table
-    		sdnNode = new sdnNode(address, version.getValue().intValue(), battery.getValue().intValue(), queueUtil.getValue().intValue());
-    		nodes.put(address, sdnNode);
-    	}
-    	//At this point there is a Map of data items: <ByteString: Array> for instance: <0001000100010001: [10, 30]>
-    	Map map = (Map) dataItems.get(3);
-    	for(DataItem key : map.getKeys()){
-    		//The key of the Map is the MAC address of a neighbour sdnNode
-			ByteString bytes = (ByteString) key;
-			//The array contains two statistics: RSSI and ETX
-			array = (Array)map.get(key);
-			dataItems = array.getDataItems();
-			NegativeInteger rssi = (NegativeInteger)dataItems.get(0);		//RSSI
-	    	UnsignedInteger etx = (UnsignedInteger)dataItems.get(1);		//ETX
-			//Covert the ByteString into an actual String
-			address = bytesToHex(bytes.getBytes());
-			//Check if the hash table already contains the neighbour sdnNode
-			if(nodes.containsKey(address))
-				//If so, get it from the hash table
-				neighbour = nodes.get(address);
-			else
-				//Otherwise create a new sdnNode object with just the MAC address. (The other statistics will be inserted when that sdnNode performs a Topology update itself)
-				neighbour = new sdnNode(address);
-			//At the end, insert this sdnNode as a neighbour of the sending sdnNode
-			sdnNode.addNeighbour(neighbour, rssi.getValue().intValue(), etx.getValue().intValue());
-		}
-		exchange.respond(ResponseCode.CHANGED);
-		network.updateMap(sdnNode);
+        if(payload != null && payload.length != 0){
+	        ByteArrayInputStream bais = new ByteArrayInputStream(payload);
+	        List<DataItem> dataItems = null;
+			try {
+				dataItems = new CborDecoder(bais).decode();
+			} catch (CborException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				exchange.respond(ResponseCode.BAD_REQUEST);
+				return;
+			}
+			//The very beginning of the Cbor structure is an array of data items
+	    	DataItem arrayItem = dataItems.get(0);
+	    	Array array = (Array)arrayItem;
+	    	dataItems = array.getDataItems();
+	    	//Retrieve the information related to the sending sdnNode
+	    	UnsignedInteger version = (UnsignedInteger)dataItems.get(0);		//Version
+	    	UnsignedInteger battery = (UnsignedInteger)dataItems.get(1);		//Battery level (percentage)
+	    	UnsignedInteger queueUtil = (UnsignedInteger)dataItems.get(2);		//Queue utilization
+	    	//Check if the sdnNode is already present into the hash table
+	    	if(nodes.containsKey(address)){
+	    		//If so, just update its statistics
+	    		sdnNode = nodes.get(address);
+	    		sdnNode.updateInfo(version.getValue().intValue(), battery.getValue().intValue(), queueUtil.getValue().intValue());
+	    	}
+	    	else{
+	    		//Otherwise, create a new sdnNode object and insert it into the hash table
+	    		sdnNode = new sdnNode(address, version.getValue().intValue(), battery.getValue().intValue(), queueUtil.getValue().intValue());
+	    		nodes.put(address, sdnNode);
+	    	}
+	    	//At this point there is a Map of data items: <ByteString: Array> for instance: <0001000100010001: [10, 30]>
+	    	Map map = (Map) dataItems.get(3);
+	    	for(DataItem key : map.getKeys()){
+	    		//The key of the Map is the MAC address of a neighbour sdnNode
+				ByteString bytes = (ByteString) key;
+				//The array contains two statistics: RSSI and ETX
+				array = (Array)map.get(key);
+				dataItems = array.getDataItems();
+				NegativeInteger rssi = (NegativeInteger)dataItems.get(0);		//RSSI
+		    	UnsignedInteger etx = (UnsignedInteger)dataItems.get(1);		//ETX
+				//Covert the ByteString into an actual String
+				address = bytesToHex(bytes.getBytes());
+				//Check if the hash table already contains the neighbour sdnNode
+				if(nodes.containsKey(address))
+					//If so, get it from the hash table
+					neighbour = nodes.get(address);
+				else
+					//Otherwise create a new sdnNode object with just the MAC address. (The other statistics will be inserted when that sdnNode performs a Topology update itself)
+					neighbour = new sdnNode(address);
+				//At the end, insert this sdnNode as a neighbour of the sending sdnNode
+				sdnNode.addNeighbour(neighbour, rssi.getValue().intValue(), etx.getValue().intValue());
+			}
+	    	network.updateMap(sdnNode);
+        }
+        exchange.respond(ResponseCode.CHANGED);
     }
 	
 	public static String bytesToHex(byte[] in) {

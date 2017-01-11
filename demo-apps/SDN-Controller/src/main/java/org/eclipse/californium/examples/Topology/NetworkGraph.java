@@ -193,10 +193,10 @@ public class NetworkGraph extends Observable {
                     setupNode(tmp, 0, now, neighbourAddress);
                 }
 
-                int rssi = Math.abs(neighbour.getRssi());
+                int etx = neighbour.getEtx();
                 String edgeId = neighbourAddress + "-" + nodeAddr;
                 Edge edge = addEdge(edgeId, neighbourAddress, node.getId(), true);
-                setupEdge(edge, rssi);
+                setupEdge(edge, etx);
             }
 
         } else {

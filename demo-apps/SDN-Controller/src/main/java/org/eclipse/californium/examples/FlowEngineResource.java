@@ -1,5 +1,7 @@
 package org.eclipse.californium.examples;
 
+import java.util.Arrays;
+
 import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.coap.CoAP.ResponseCode;
 import org.eclipse.californium.core.server.resources.CoapExchange;
@@ -65,39 +67,83 @@ public class FlowEngineResource extends CoapResource {
 		counter++;
 		String src = exchange.getQueryParameter("mac");
 		String dst = null;
+		payload = exchange.getRequestPayload();
+		packet = new SixLoWPANPacket(payload);
+		
 		//exchange.accept();
 		/*
 		if(exchange.getQueryParameter("mac").equals(new String("0002000200020002")) )
 			exchange.respond(ResponseCode.CHANGED, cborEncoding);
 		else
-		*/
+		
 			exchange.respond(ResponseCode.CHANGED);
-
+		 */
+		/*
 		System.out.println("Received request " + counter +" from: " + exchange.getSourceAddress());
         System.out.println(" type = " + exchange.getQueryParameter("type"));
         System.out.println(" mac = " + exchange.getQueryParameter("mac"));
         exchange.respond(ResponseCode.CHANGED);
-        payload = exchange.getRequestPayload();
         System.out.println("PAYLOAD:");
         System.out.println(bytesToHex(payload));
-        packet = new SixLoWPANPacket(payload);
+        
         System.out.println("\tFA = " + bytesToHex(packet.getFinalAddress()));
         System.out.println("\tOA = " + bytesToHex(packet.getOriginatorAddress()));
         System.out.println("\tFirst = " + packet.isFragmentationFirstHeader() + " FRAG = " + packet.getDatagramTag()+ " OFFSET = " + packet.getDatagramOffset());
-
-        dst = bytesToHex(packet.getFinalAddress());
-		dijkstra.init(NetworkResource.getGraph());
-		Node source = NetworkResource.getNode(src);
-		if(source == null)
-			return;
-		dijkstra.setSource(source);
-		dijkstra.compute();
-		System.out.println("PATH:");
-		for (Node node : dijkstra.getPathNodes(NetworkResource.getNode(dst))){
-			System.out.println(node.getId());
+		*/
+		byte[] finalAddress = packet.getFinalAddress();
+		if(finalAddress != null){
+	        dst = bytesToHex(packet.getFinalAddress());
+			dijkstra.init(NetworkResource.getGraph());
+			Node source = NetworkResource.getNode(src);
+			Node destination = NetworkResource.getNode(dst);
+			if(source == null || destination == null)
+				return;
+			System.out.println("From: " + src + " to " + dst);
+			dijkstra.setSource(source);
+			dijkstra.compute();
+			Node nextHop = null;
+			System.out.print("PATH: ");
+			Iterable<Node> path = dijkstra.getPathNodes(destination);
+			for (Node node : path){
+				System.out.print(" -> " + node.getId());
+				if(node.equals(source)){
+					break;
+				}
+				nextHop = node;
+			}
+			System.out.println("");
+			if(nextHop != null){
+				System.out.println("Nxt: " + bytesToHex(hexStringToByteArray(nextHop.getId())));
+				FlowTable ft = new FlowTable();
+				FlowEntry fe = new FlowEntry(10, 0);
+				Rule r = new Rule(Fields.MH_DST_ADDR, 0, 64, Operators.EQUAL, packet.getFinalAddress());
+				Action a = new Action(TypeOfAction.FORWARD, Fields.NO_FIELD, 0, 64, hexStringToByteArray(nextHop.getId()));
+				fe.addRule(r);
+				fe.addAction(a);
+				ft.insertFlowEntry(fe);
+				try {
+					cborEncoding = ft.toCbor();
+				} catch (CborException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				exchange.respond(ResponseCode.CHANGED, cborEncoding);
+				System.out.println(bytesToHex(cborEncoding));
+			}
 		}
+		exchange.respond(ResponseCode.CHANGED);
+		
 	}
 	
+	public static byte[] hexStringToByteArray(String s) {
+	    int len = s.length();
+	    byte[] data = new byte[len / 2];
+	    for (int i = 0; i < len; i += 2) {
+	        data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+	                             + Character.digit(s.charAt(i+1), 16));
+	    }
+	    return data;
+	}
 	
 	public static String bytesToHex(byte[] in) {
 	    final StringBuilder builder = new StringBuilder();
