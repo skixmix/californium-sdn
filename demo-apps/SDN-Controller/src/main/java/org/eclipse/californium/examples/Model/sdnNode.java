@@ -1,6 +1,7 @@
 package org.eclipse.californium.examples.Model;
 
 
+import java.net.InetAddress;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -9,6 +10,7 @@ import java.util.Hashtable;
 public class sdnNode {
 
 	private String address;
+	private InetAddress ipAddress;
 	private int version;
 	private int batteryLevel;
 	private int queueUtilization;
@@ -41,6 +43,19 @@ public class sdnNode {
 			neighbours.put(neighbour.getAddress(), n);
 		}
 		this.lastUpdate = new Date(System.currentTimeMillis()).getTime();
+		//DEBUG
+		System.out.println(this.lastUpdate + " update: rssi=" + n.rssi + " etx=" + n.etx + " to " + n.getAddress());
+	}
+	
+	public void setIpAdddress(InetAddress ipAddress){
+		this.ipAddress = ipAddress;
+	}
+	
+	public String getIpAddress() {
+		if(this.ipAddress != null)
+			return this.ipAddress.getHostAddress();
+		else
+			return null;
 	}
 	
 	public void updateInfo(int version, int battery, int queue){
@@ -83,13 +98,17 @@ public class sdnNode {
 		return neighbours.size();
 	}
 
-
 	public Neighbour getNeighbor(int i){
 		Object[] keys = neighbours.keySet().toArray();
 		return neighbours.get(keys[i]);
 	}
 
-
+	@Override
+	public String toString() {
+		return this.address;
+	}
+	
+	/*
 	@Override
 	public String toString() {
 		String ret = "sdnNode [address=" + address + ", version=" + version + ", batteryLevel=" + batteryLevel
@@ -107,7 +126,7 @@ public class sdnNode {
 		ret += "]";
 		return ret;
 	}
-	
+	*/
 
 	public class Neighbour{
 		sdnNode sdnNode;
@@ -129,6 +148,9 @@ public class sdnNode {
 
 		public int getEtx() {
 			return etx;
+		}
+		public sdnNode getNode(){
+			return sdnNode;
 		}
 	}
 

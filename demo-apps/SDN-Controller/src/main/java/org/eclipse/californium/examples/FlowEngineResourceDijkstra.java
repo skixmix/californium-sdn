@@ -18,40 +18,20 @@ import co.nstant.in.cbor.CborException;
 import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.graph.Node;
 
-public class FlowEngineResource extends CoapResource {
+public class FlowEngineResourceDijkstra extends CoapResource {
 	private int counter = 0;
 	private byte[] cborEncoding = null;
 	private final Dijkstra dijkstra;
+	private long startingTime;
+	private long waitingTime = 1000 * 60 * 1;		//1 Minutes
 	
-	public FlowEngineResource() {
+	public FlowEngineResourceDijkstra() {
 		super("Flow_engine");
 		// set display name
         getAttributes().setTitle("Flow_engine");
 		dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "length");
-
-        byte[] FinalAddress4 = {0x00,0x04,0x00,0x04,0x00,0x04,0x00,0x04};
-        byte[] FinalAddress5 = {0x00,0x05,0x00,0x05,0x00,0x05,0x00,0x05};
-        byte[] NextHopAddress = {0x00,0x03,0x00,0x03,0x00,0x03,0x00,0x03};
-		FlowTable ft = new FlowTable();
-		FlowEntry fe = new FlowEntry(10, 0);
-		Rule r = new Rule(Fields.MH_DST_ADDR, 0, 64, Operators.EQUAL, FinalAddress4);
-		Action a = new Action(TypeOfAction.FORWARD, Fields.NO_FIELD, 0, 64, NextHopAddress);
-		fe.addRule(r);
-		fe.addAction(a);
-		ft.insertFlowEntry(fe);
-		fe = new FlowEntry(10, 0);
-		r = new Rule(Fields.MH_DST_ADDR, 0, 64, Operators.EQUAL, FinalAddress5);
-		a = new Action(TypeOfAction.FORWARD, Fields.NO_FIELD, 0, 64, NextHopAddress);
-		fe.addRule(r);
-		fe.addAction(a);
-		ft.insertFlowEntry(fe);
-		try {
-			cborEncoding = ft.toCbor();
-		} catch (CborException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+		startingTime = System.currentTimeMillis();
+    }
 
 	@Override
     public void handleGET(CoapExchange exchange) {
@@ -62,37 +42,24 @@ public class FlowEngineResource extends CoapResource {
 	
 	@Override
     public void handlePOST(CoapExchange exchange) {
+		
+		if(System.currentTimeMillis() - startingTime < waitingTime){
+			exchange.respond(ResponseCode.CHANGED);
+			return;
+		}
+		
 		byte[] payload;
 		SixLoWPANPacket packet;
 		counter++;
 		String src = exchange.getQueryParameter("mac");
 		String dst = null;
 		payload = exchange.getRequestPayload();
+		//System.out.println("PACKET DIM = " + payload.length);
 		packet = new SixLoWPANPacket(payload);
 		
-		//exchange.accept();
-		/*
-		if(exchange.getQueryParameter("mac").equals(new String("0002000200020002")) )
-			exchange.respond(ResponseCode.CHANGED, cborEncoding);
-		else
-		
-			exchange.respond(ResponseCode.CHANGED);
-		 */
-		/*
-		System.out.println("Received request " + counter +" from: " + exchange.getSourceAddress());
-        System.out.println(" type = " + exchange.getQueryParameter("type"));
-        System.out.println(" mac = " + exchange.getQueryParameter("mac"));
-        exchange.respond(ResponseCode.CHANGED);
-        System.out.println("PAYLOAD:");
-        System.out.println(bytesToHex(payload));
-        
-        System.out.println("\tFA = " + bytesToHex(packet.getFinalAddress()));
-        System.out.println("\tOA = " + bytesToHex(packet.getOriginatorAddress()));
-        System.out.println("\tFirst = " + packet.isFragmentationFirstHeader() + " FRAG = " + packet.getDatagramTag()+ " OFFSET = " + packet.getDatagramOffset());
-		*/
 		byte[] finalAddress = packet.getFinalAddress();
 		if(finalAddress != null){
-	        dst = bytesToHex(packet.getFinalAddress());
+	        dst = bytesToHex(finalAddress);
 			dijkstra.init(NetworkResource.getGraph());
 			Node source = NetworkResource.getNode(src);
 			Node destination = NetworkResource.getNode(dst);
@@ -115,7 +82,7 @@ public class FlowEngineResource extends CoapResource {
 			if(nextHop != null){
 				System.out.println("Nxt: " + bytesToHex(hexStringToByteArray(nextHop.getId())));
 				FlowTable ft = new FlowTable();
-				FlowEntry fe = new FlowEntry(10, 0);
+				FlowEntry fe = new FlowEntry(30, 0);
 				Rule r = new Rule(Fields.MH_DST_ADDR, 0, 64, Operators.EQUAL, packet.getFinalAddress());
 				Action a = new Action(TypeOfAction.FORWARD, Fields.NO_FIELD, 0, 64, hexStringToByteArray(nextHop.getId()));
 				fe.addRule(r);

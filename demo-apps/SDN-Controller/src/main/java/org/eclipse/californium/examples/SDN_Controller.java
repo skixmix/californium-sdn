@@ -40,10 +40,12 @@ public class SDN_Controller extends CoapServer {
      */
     private void addEndpoints() {
     	for (InetAddress addr : EndpointManager.getEndpointManager().getNetworkInterfaces()) {
-    		// only binds to IPv4 addresses and localhost
+    		//binds to all IPv4 addresses, localhost and IPv6 fd00::1
 			if (addr instanceof Inet4Address || addr instanceof Inet6Address || addr.isLoopbackAddress()) {
-				InetSocketAddress bindToAddress = new InetSocketAddress(addr, COAP_PORT);
-				addEndpoint(new CoapEndpoint(bindToAddress));
+				if(addr.getHostAddress().equals("fd00:0:0:0:0:0:0:1%tun0")){
+					InetSocketAddress bindToAddress = new InetSocketAddress(addr, COAP_PORT);
+					addEndpoint(new CoapEndpoint(bindToAddress));
+				}
 			}
 		}
     }
@@ -53,9 +55,13 @@ public class SDN_Controller extends CoapServer {
      * of the server are initialized.
      */
     public SDN_Controller() throws SocketException {
-        
-        add(new NetworkResource());
-        add(new FlowEngineResource());
+    	CoapResource FlowEngine =  new FlowEngineResourceDijkstra();
+    	//CoapResource FlowEngine =  new FlowEngineResourceBalancedTree();
+    	NetworkResource networkResource = new NetworkResource();
+    	networkSlicingService slicingService = new networkSlicingService(networkResource);
+    	add(slicingService);
+        add(networkResource);
+        add(FlowEngine);
     }
 
 }

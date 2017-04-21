@@ -301,6 +301,9 @@ public class CoapClient {
 		Request discover = newGet();
 		discover.setURI(uri); // for scheme and authority, but then remove path and query
 		discover.getOptions().clearUriPath().clearUriQuery().setUriPath("/.well-known/core");
+		//ADDED TO ALLOW DISCOVERY THROUGH NON MESSAGES
+		discover.setType(this.type);
+		//ADDED
 		if (query!=null) {
 			discover.getOptions().setUriQuery(query);
 		}

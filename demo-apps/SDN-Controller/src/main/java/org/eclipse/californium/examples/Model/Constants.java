@@ -8,7 +8,8 @@ public class Constants {
 	    DECREMENT(4),
 	    INCREMENT(5),
 	    CONTINUE(6),
-	    TO_UPPER_L(7);
+	    TO_UPPER_L(7),
+		BROADCAST(8);
 	    
 	    private final int id;
 		TypeOfAction(int id) { this.id = id; }

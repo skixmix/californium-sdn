@@ -33,7 +33,6 @@ import org.graphstream.graph.implementations.MultiGraph;
  * a message with Topology updates is sent to the controller.
  *
  * @author Sebastiano Milardo
- * @author Giulio Micheloni
  */
 
 public class NetworkGraph extends Observable {
@@ -193,7 +192,7 @@ public class NetworkGraph extends Observable {
                     setupNode(tmp, 0, now, neighbourAddress);
                 }
 
-                int etx = neighbour.getEtx();
+                int etx = 1;
                 String edgeId = neighbourAddress + "-" + nodeAddr;
                 Edge edge = addEdge(edgeId, neighbourAddress, node.getId(), true);
                 setupEdge(edge, etx);
@@ -212,17 +211,17 @@ public class NetworkGraph extends Observable {
                     setupNode(tmp, 0, now, neighbourAddress);
                 }
 
-                int newRssi = Math.abs(neighbour.getRssi());
+                int newEtx = 1;
 
                 String edgeId = neighbourAddress + "-" + nodeAddr;
                 Edge edge = getEdge(edgeId);
                 if (edge != null) {
                     oldEdges.remove(edge);
                     int oldLen = edge.getAttribute("length");
-                    updateEdge(edge, newRssi);
+                    updateEdge(edge, newEtx);
                 } else {
                     Edge tmp = addEdge(edgeId, neighbourAddress, node.getId(), true);
-                    setupEdge(tmp, newRssi);
+                    setupEdge(tmp, newEtx);
                 }
             }
 

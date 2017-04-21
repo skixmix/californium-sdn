@@ -28,8 +28,24 @@ public class NetworkResource extends CoapResource{
         getAttributes().setTitle("Network");
         nodes = new Hashtable<>();
 		network = new NetworkGraph();
-
+		
+		//For experiment purpose
+		/*
+		sdnNode udpServer = new sdnNode("0200000000000002");
+		sdnNode sinkNode = new sdnNode("0001000100010001");
+		sinkNode.addNeighbour(udpServer, 1, 1);
+		udpServer.addNeighbour(sinkNode, 1, 1);
+		nodes.put(udpServer.getAddress(), udpServer);
+		nodes.put(sinkNode.getAddress(), sinkNode);
+		network.updateMap(udpServer);
+		network.updateMap(sinkNode);
+		*/
 	}
+	
+	public Hashtable<String, sdnNode> getNodesTable(){
+		return nodes;
+	}
+	
 
 	@Override
     public void handleGET(CoapExchange exchange) {
@@ -94,6 +110,7 @@ public class NetworkResource extends CoapResource{
 	    	else{
 	    		//Otherwise, create a new sdnNode object and insert it into the hash table
 	    		sdnNode = new sdnNode(address, version.getValue().intValue(), battery.getValue().intValue(), queueUtil.getValue().intValue());
+	    		sdnNode.setIpAdddress(exchange.getSourceAddress());
 	    		nodes.put(address, sdnNode);
 	    	}
 	    	//At this point there is a Map of data items: <ByteString: Array> for instance: <0001000100010001: [10, 30]>
@@ -104,21 +121,24 @@ public class NetworkResource extends CoapResource{
 				//The array contains two statistics: RSSI and ETX
 				array = (Array)map.get(key);
 				dataItems = array.getDataItems();
-				NegativeInteger rssi = (NegativeInteger)dataItems.get(0);		//RSSI
-		    	UnsignedInteger etx = (UnsignedInteger)dataItems.get(1);		//ETX
-				//Covert the ByteString into an actual String
-				address = bytesToHex(bytes.getBytes());
-				//Check if the hash table already contains the neighbour sdnNode
-				if(nodes.containsKey(address))
-					//If so, get it from the hash table
-					neighbour = nodes.get(address);
-				else
-					//Otherwise create a new sdnNode object with just the MAC address. (The other statistics will be inserted when that sdnNode performs a Topology update itself)
-					neighbour = new sdnNode(address);
-				//At the end, insert this sdnNode as a neighbour of the sending sdnNode
-				sdnNode.addNeighbour(neighbour, rssi.getValue().intValue(), etx.getValue().intValue());
+				if(dataItems != null){
+					NegativeInteger rssi = (NegativeInteger)dataItems.get(0);		//RSSI
+					UnsignedInteger etx = (UnsignedInteger)dataItems.get(1);		//ETX
+					//Covert the ByteString into an actual String
+					address = bytesToHex(bytes.getBytes());
+					//Check if the hash table already contains the neighbour sdnNode
+					if(nodes.containsKey(address))
+						//If so, get it from the hash table
+						neighbour = nodes.get(address);
+					else
+						//Otherwise create a new sdnNode object with just the MAC address. (The other statistics will be inserted when that sdnNode performs a Topology update itself)
+						neighbour = new sdnNode(address);
+					//At the end, insert this sdnNode as a neighbour of the sending sdnNode
+					sdnNode.addNeighbour(neighbour, rssi.getValue().intValue(), etx.getValue().intValue());
+				}
 			}
-	    	network.updateMap(sdnNode);
+			if(sdnNode != null)
+				network.updateMap(sdnNode);
         }
         exchange.respond(ResponseCode.CHANGED);
     }
@@ -138,4 +158,5 @@ public class NetworkResource extends CoapResource{
 	public static Node getNode(String src) {
 		return network.getNode(src);
 	}
+	
 }
