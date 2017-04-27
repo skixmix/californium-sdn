@@ -46,9 +46,9 @@ public class networkSlicingService extends CoapResource{
 	
 	
 	public networkSlicingService(NetworkResource networkResource) {
-		super("Network_Slicing_Service");
+		super("nss");
 		// set display name
-        getAttributes().setTitle("Network_Slicing_Service");
+        getAttributes().setTitle("nss");
         
         allowedAddresses = new HashMap<>();
         
@@ -166,7 +166,7 @@ public class networkSlicingService extends CoapResource{
 			byte[] ruleCbor = generateRuleUnicast(applicationAddress, node, parent);
 			if(ruleCbor == null)
 				continue;
-			boolean result = coapClientSend("[" + node.getIpAddress() + "]:5683/local_control_agent/flow_table", "PUT", ruleCbor);
+			boolean result = coapClientSend("[" + node.getIpAddress() + "]:5683/lca/ft", "PUT", ruleCbor);
 			if(result == false)
 				retries.add(node);
 			delay(100);
@@ -176,7 +176,7 @@ public class networkSlicingService extends CoapResource{
 		for(sdnNode node : retries){
 			sdnNode parent = multicastTree.getParent(node);
 			byte[] ruleCbor = generateRuleUnicast(applicationAddress, node, parent);
-			boolean result = coapClientSend("[" + node.getIpAddress() + "]:5683/local_control_agent/flow_table", "PUT", ruleCbor);
+			boolean result = coapClientSend("[" + node.getIpAddress() + "]:5683/lca/ft", "PUT", ruleCbor);
 			delay(200);
 		}
 		
@@ -186,7 +186,7 @@ public class networkSlicingService extends CoapResource{
 			for(sdnNode parent : multicastTree.getNodesSet()){
 				if(parent.getNeighbours().containsKey(meshAddress)){
 					byte[] ruleCbor = generateRuleUnicast(applicationAddress, node ,parent);
-					coapClientSend("[" + node.getIpAddress() + "]:5683/local_control_agent/flow_table", "PUT", ruleCbor);
+					coapClientSend("[" + node.getIpAddress() + "]:5683/lca/ft", "PUT", ruleCbor);
 					delay(200);
 					break;
 				}
@@ -224,7 +224,7 @@ public class networkSlicingService extends CoapResource{
 			String nodeUnicastAddress = node.getIpAddress();
 			if(nodeUnicastAddress == null)
 				continue;
-			boolean result = coapClientSend("[" + nodeUnicastAddress + "]:5683/local_control_agent/flow_table", "PUT", ruleCbor);
+			boolean result = coapClientSend("[" + nodeUnicastAddress + "]:5683/lca/ft", "PUT", ruleCbor);
 			/*
 			Request request = Request.newPut();
 			request.setURI("[" + node.getIpAddress() + "]:5683/local_control_agent/flow_table");	
@@ -277,14 +277,14 @@ public class networkSlicingService extends CoapResource{
 	private void assignMulticastToNodes(InetAddress multicastAddress, String[] ipv6Addresses) {
 		ArrayList<String> retries = new ArrayList<>();
 		for(String addr : ipv6Addresses){
-			boolean result = coapClientSend("[" + addr + "]" + ":5683/coap-group", "POST", multicastAddress.getAddress());
+			boolean result = coapClientSend("[" + addr + "]" + ":5683/cg", "POST", multicastAddress.getAddress());
 			if(result == false)
 				retries.add(addr);
 			delay(100);
 		}	
 		//Retry failed sends		
 		for(String addr : retries){			
-			boolean result = coapClientSend("[" + addr + "]" + ":5683/coap-group", "POST", multicastAddress.getAddress());
+			boolean result = coapClientSend("[" + addr + "]" + ":5683/cg", "POST", multicastAddress.getAddress());
 			delay(200);
 		}
 	}
@@ -319,7 +319,7 @@ public class networkSlicingService extends CoapResource{
 		fe.addAction(a);
 		ft.insertFlowEntry(fe);
 		byte[] cborEncoding = ft.toCbor();
-		coapClientSend("[fd00::201:1:1:1]:5683/local_control_agent/flow_table", "PUT", cborEncoding);
+		coapClientSend("[fd00::201:1:1:1]:5683/lca/ft", "PUT", cborEncoding);
 		/*
 		Request request = Request.newPut();
 		request.setURI("[fd00::201:1:1:1]:5683/local_control_agent/flow_table");	
@@ -352,7 +352,7 @@ public class networkSlicingService extends CoapResource{
 		fe.addAction(a2);
 		ft.insertFlowEntry(fe);
 		byte[] cborEncoding = ft.toCbor();
-		coapClientSend("[fd00::201:1:1:1]:5683/local_control_agent/flow_table", "PUT", cborEncoding);
+		coapClientSend("[fd00::201:1:1:1]:5683/lca/ft", "PUT", cborEncoding);
 		/*
 		Request request = Request.newPut();
 		request.setURI("[fd00::201:1:1:1]:5683/local_control_agent/flow_table");

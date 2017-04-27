@@ -58,8 +58,8 @@ public class SDN_Controller extends CoapServer {
     	CoapResource FlowEngine =  new FlowEngineResourceDijkstra();
     	//CoapResource FlowEngine =  new FlowEngineResourceBalancedTree();
     	NetworkResource networkResource = new NetworkResource();
-    	networkSlicingService slicingService = new networkSlicingService(networkResource);
-    	add(slicingService);
+    	//networkSlicingService slicingService = new networkSlicingService(networkResource);
+    	//add(slicingService);
         add(networkResource);
         add(FlowEngine);
     }

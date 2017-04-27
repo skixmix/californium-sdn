@@ -23,12 +23,12 @@ public class FlowEngineResourceDijkstra extends CoapResource {
 	private byte[] cborEncoding = null;
 	private final Dijkstra dijkstra;
 	private long startingTime;
-	private long waitingTime = 1000 * 60 * 1;		//1 Minutes
+	private long waitingTime = 1000 * 1;		//1 Minutes
 	
 	public FlowEngineResourceDijkstra() {
-		super("Flow_engine");
+		super("fe");
 		// set display name
-        getAttributes().setTitle("Flow_engine");
+        getAttributes().setTitle("fe");
 		dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "length");
 		startingTime = System.currentTimeMillis();
     }
@@ -42,7 +42,7 @@ public class FlowEngineResourceDijkstra extends CoapResource {
 	
 	@Override
     public void handlePOST(CoapExchange exchange) {
-		
+		System.out.print("Table miss: ");
 		if(System.currentTimeMillis() - startingTime < waitingTime){
 			exchange.respond(ResponseCode.CHANGED);
 			return;

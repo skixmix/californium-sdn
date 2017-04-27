@@ -29,17 +29,16 @@ public class NetworkResource extends CoapResource{
         nodes = new Hashtable<>();
 		network = new NetworkGraph();
 		
-		//For experiment purpose
-		/*
+		//For experiment purpose		
 		sdnNode udpServer = new sdnNode("0200000000000002");
-		sdnNode sinkNode = new sdnNode("0001000100010001");
+		sdnNode sinkNode = new sdnNode("020000000000c171");
 		sinkNode.addNeighbour(udpServer, 1, 1);
 		udpServer.addNeighbour(sinkNode, 1, 1);
 		nodes.put(udpServer.getAddress(), udpServer);
 		nodes.put(sinkNode.getAddress(), sinkNode);
 		network.updateMap(udpServer);
 		network.updateMap(sinkNode);
-		*/
+		
 	}
 	
 	public Hashtable<String, sdnNode> getNodesTable(){

@@ -27,9 +27,9 @@ public class FlowEngineResourceBalancedTree extends CoapResource {
 	private byte[] cborEncoding = null;
 	private PathsTable ForwardingPlan;
 	public FlowEngineResourceBalancedTree() {
-		super("Flow_engine");
+		super("fe");
 		// set display name
-        getAttributes().setTitle("Flow_engine");
+        getAttributes().setTitle("fe");
         
         int[] nodes = new int[21];
         for(int i = 0; i < nodes.length; i++)
