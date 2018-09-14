@@ -1,4 +1,9 @@
 package org.eclipse.californium.examples;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
@@ -39,6 +44,8 @@ public class SlicingEngine extends CoapResource{
 	private static HashMap<String, String[]> app_mc; //Mapping between app IPv6 and all the multicast groups handled
 	private String Sink;
 	private int multicastCounter;
+	private int numeroLog = 0;
+	private static long startTime;
 	
 	public SlicingEngine(){
 		super("se");
@@ -49,6 +56,36 @@ public class SlicingEngine extends CoapResource{
 		app_mc = new HashMap<>();
 		Sink = "0001000100010001"; //Sink node is known
 		multicastCounter = 1;
+		
+		//Trova il numero di file di log
+				System.out.println(System.getProperty("user.dir"));
+				File folder = new File(System.getProperty("user.dir"));
+				File[] listOfFiles = folder.listFiles();
+				int maxNumero = 0;
+				    for (int i = 0; i < listOfFiles.length; i++) {
+				      if (listOfFiles[i].isFile()) {
+				        if(listOfFiles[i].getName().contains("log")){
+				        	//controller-X.log
+				        	int numer = Integer.parseInt(listOfFiles[i].getName().split("-")[1].replace(".log", ""));
+				        	if(numer > maxNumero)
+				        		maxNumero = numer;
+				        }
+				      }
+				    }
+				numeroLog = maxNumero + 1;    
+				
+				System.out.println("Log " + numeroLog);
+				startTime = System.nanoTime(); 
+				long currentTime = (System.nanoTime() - startTime)/1000;
+				PrintWriter makeLogFile;
+				
+				try {
+					makeLogFile = new PrintWriter("controller-" + numeroLog + ".log", "UTF-8"); //Will overwrite the file if already exists
+					makeLogFile.println(currentTime + ":1:Slicing Engine started");
+					makeLogFile.close();
+				}catch (Exception e) {
+					System.out.println("Error while generating the log file!");
+				}
 	}
 	
 	public static void addNodeIP(String ip){
@@ -117,54 +154,100 @@ public class SlicingEngine extends CoapResource{
 		//Construct the set P of preferred nodes
 		LinkedList<String> P = new LinkedList<>();
 		P.add(Sink);
-		System.out.print("Preferred nodes MACs: ");
+		//System.out.print("Preferred nodes MACs: ");
+		long currentTime = (System.nanoTime() - startTime)/1000;
+		String output = currentTime + ":1:SE Contacted by Client. Preferred nodes MACs are listed below\n";
+		output += currentTime + ":1:";
 		for(String str: ipv6Addresses){
 			if(str.compareTo(Sink) == 0) //Avoid the Sink, already inserted
 				continue;
 			
-			System.out.print(macFromIPv6(str) + " ");
+			//System.out.print(macFromIPv6(str) + " ");
+			output += macFromIPv6(str) + " ";
 			P.add(macFromIPv6(str));
+			
+			if(NetworkResource.getNode(macFromIPv6(str)) != null)
+				System.out.println("Node " + macFromIPv6(str) + " is known!");
+			else
+				System.out.println("Warning: Node " + macFromIPv6(str) + " is NOT known!!");
 		}
-		System.out.print("\n");
+		//System.out.print("\n");
 		
 		
-		SteinerTree t = CDS.Algorithm_B(NetworkResource.getGraph(), (LinkedList<String>)P.clone());
+		//Write to log
+		try {
+			Writer log = new BufferedWriter(new FileWriter("controller-" + numeroLog + ".log", true));
+			log.append(output);
+			log.append("\n");
+			log.close();
+		} catch (Exception e) {
+			System.out.println("ERROR! Unable to write controller log!");
+		}
 		
-		System.out.println("1-fold CDS:");
-		Iterator<String> it = t.getNodes().iterator();
+		output = "";
 		
 		//1-Fold case
+		/*
+		SteinerTree t = CDS.Algorithm_B(NetworkResource.getGraph(), (LinkedList<String>)P.clone());
+		
+		//System.out.println("1-fold CDS:");
+		output += currentTime + ":1: 1-Fold CDS constructed:\n";
+		Iterator<String> it = t.getNodes().iterator();
+		
+		
 		LinkedList<TreeNode> cds = new LinkedList<>();
 		
 		while(it.hasNext()){
  			String n = it.next();
- 			System.out.print(n);
+ 			//System.out.print(n);
+ 			output += currentTime + ":1: " + n;
  			
  			cds.add(t.getTreeNode(n));
  			
  			if(!t.getTreeNode(n).getChildrens().isEmpty()){
- 				System.out.print(" (with childrens: ");
+ 				//System.out.print(" (with children: ");
+ 				output += " (with children: ";
  				Iterator<TreeNode> chi = t.getTreeNode(n).getChildrens().iterator();
  				while(chi.hasNext()){
  					TreeNode children = chi.next();
- 					System.out.print(children.getNodeID());
- 					if(chi.hasNext())
- 						System.out.print(", ");
+ 					//System.out.print(children.getNodeID());
+ 					output += children.getNodeID();
+ 					if(chi.hasNext()){
+ 						//System.out.print(", ");
+ 						output += ", ";
+ 					}
  				}
- 				System.out.print(")");
+ 				//System.out.print(")");
+ 				output += ")";
  			}
- 			System.out.print("\n");
+ 			//System.out.print("\n");
+ 			output += "\n";
  		}
+		*/
 		
+		//2-Fold case
+		LinkedList<TreeNode> cds = CDS.Algorithm_C(NetworkResource.getGraph(), (LinkedList<String>)P.clone());
 		
-		//Construct the slice with the CDS algorithm (2-fold case)
-		//LinkedList<TreeNode> cds = CDS.Algorithm_C(NetworkResource.getGraph(), (LinkedList<String>)P.clone());
-		//Store the CDS inside the controller
-		FlowEngineDiProva.Stored_CDS = cds;
-		
-		System.out.println(">>>>>>>>>>>>>> 1-Fold NODES IN THE BACKBONE: " + cds.size());
-		
-		//////
+		output += currentTime + ":1: 2-Fold CDS constructed:\n";	
+		Iterator<TreeNode> it4 = cds.iterator();
+ 		while (it4.hasNext()){
+ 			TreeNode n = it4.next();
+ 			output += currentTime + ":1:" + n.getNodeID();
+ 			if(n.getChildrens().size() > 0){
+ 				output += " (with children: ";
+ 				Iterator<TreeNode> chi = n.getChildrens().iterator();
+ 				while(chi.hasNext()){
+ 					TreeNode children = chi.next();
+ 					output += children.getNodeID();
+ 					if(chi.hasNext())
+ 						output += ", ";
+ 				}
+ 				output += ")";
+ 			}
+ 			output += "\n";
+ 		}
+ 		
+		output += currentTime + ":1: Nodes in the backbone  " + cds.size() + "\n";
 		Iterator<TreeNode> itt = cds.iterator();
 		HashSet<String> contorno = new HashSet<>();
 		while(itt.hasNext()){
@@ -178,40 +261,16 @@ public class SlicingEngine extends CoapResource{
 				}
 			}
 		}
-		System.out.println(">>>>>>>>>>>>>> 1-Fold CONTORNO: " + (contorno.size() - cds.size()));
-		
-		//2-fold
-		LinkedList<TreeNode> cds2 = CDS.Algorithm_C(NetworkResource.getGraph(), (LinkedList<String>)P.clone());
-		
-		HashSet<String> veri = new HashSet<>();
-		itt = cds2.iterator();
-		while(itt.hasNext()){
-			TreeNode n = itt.next();
-			if(!veri.contains(n.getNodeID()))
-				veri.add(n.getNodeID());
-		}
-		System.out.println(">>>>>>>>>>>>>> 2-Fold NODES IN THE BACKBONE: " + veri.size());
-		
-		contorno = new HashSet<>();
-		Iterator<String >its = veri.iterator();
-		while(its.hasNext()){
-			//Per ogni nodo nello slice, vedi chi sono i vicini e conta quelli di contorno
-			String n = its.next();
-			Iterator<Node> ittt = NetworkResource.getNode(n).getNeighborNodeIterator();
-			while(ittt.hasNext()){
-				Node nn = ittt.next();
-				if(!contorno.contains(nn.getId())){
-					contorno.add(nn.getId());
-				}
-			}
-		}
-		System.out.println(">>>>>>>>>>>>>> 2-Fold CONTORNO: " + (contorno.size() - veri.size()));		
-		/////
+		output += currentTime + ":1: 2-Fold CONTORNO " + (contorno.size() - cds.size()) + "\n";
+		output += currentTime + ":1: Installing rules and answering to client\n";
+
 		
 		
-		
+		//Store the CDS inside the controller
+		FlowEngineDiProva.Stored_CDS = cds;
+
 		if(cds != null)
-			System.out.println("2-fold CDS constructed!");
+			System.out.println("CDS constructed!");
 		
 		//Generate a multicast address for the group
 		InetAddress multicastAddress;
@@ -248,8 +307,22 @@ public class SlicingEngine extends CoapResource{
 		
 		
 		//For what regards normal communication (App <--> Node), the standard SDN rules are utilized, and the installed rules at the
-		//BR are used to avoid the application talking to nodes1 that DO NOT belong to the slice		
+		//BR are used to avoid the application talking to nodes that DO NOT belong to the slice		
+		currentTime = (System.nanoTime() - startTime)/1000;
+		output += currentTime + ":1: Done!";
+		//Write to log
+		try {
+			Writer log = new BufferedWriter(new FileWriter("controller-" + numeroLog + ".log", true));
+			log.append(output);
+			log.append("\n");
+			log.close();
+		} catch (Exception e) {
+			System.out.println("ERROR! Unable to write controller log!");
+		}
 	}
+	
+	
+	
 	
 	//Auxiliary Functions
 	
@@ -358,16 +431,15 @@ public class SlicingEngine extends CoapResource{
 	private String macFromIPv6(String ip){
 		//Based on the assumption that in our network the mapping is fd00:0:0:0:201:1:1:1  -->  0001000100010001
 	
-		//On the testbed it is instead 000100010001000x
+		//On the testbed it is 000100010001000x
 		String nodeNumber = ip.split(":")[ip.split(":").length - 1];
 		
 		//MAC address should be of length equal to 16
-		String mac = "";
-		for(int i = 0; i < 4; i++){
-			for(int j = 0; j < 4 - nodeNumber.length(); j++)
-				mac += "0";
-			mac += nodeNumber;
-		}
+		String mac = "000100010001";
+		//for the testbed
+		for(int j = 0; j < 4 - nodeNumber.length(); j++)
+			mac += "0";
+		mac += nodeNumber; //Es. from fd00::201:1:1:1a --> 000100010001001a
 
 		return mac;
 	}
