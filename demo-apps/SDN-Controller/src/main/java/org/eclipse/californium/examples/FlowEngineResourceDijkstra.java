@@ -19,7 +19,6 @@ import org.graphstream.algorithm.Dijkstra;
 import org.graphstream.graph.Node;
 
 public class FlowEngineResourceDijkstra extends CoapResource {
-	private int counter = 0;
 	private byte[] cborEncoding = null;
 	private final Dijkstra dijkstra;
 	private long startingTime;
@@ -30,59 +29,68 @@ public class FlowEngineResourceDijkstra extends CoapResource {
 		// set display name
         getAttributes().setTitle("fe");
 		dijkstra = new Dijkstra(Dijkstra.Element.EDGE, null, "length");
-		startingTime = System.currentTimeMillis();
+		startingTime = System.currentTimeMillis();	
     }
 
 	@Override
-    public void handleGET(CoapExchange exchange) {
-        
+    public void handleGET(CoapExchange exchange) { 
         // respond to the request
         exchange.respond("SDN Controller payload");
+        System.out.println("Handling GET request");
     }
 	
 	@Override
     public void handlePOST(CoapExchange exchange) {
-		System.out.print("Table miss: ");
+		System.out.println("----- Handling Table miss -----");
+		
 		if(System.currentTimeMillis() - startingTime < waitingTime){
+			System.out.println(">> Resource Changed");
 			exchange.respond(ResponseCode.CHANGED);
 			return;
 		}
-		
-		byte[] payload;
+
+		byte[] payload; //payload received
 		SixLoWPANPacket packet;
-		counter++;
-		String src = exchange.getQueryParameter("mac");
+		String src = exchange.getQueryParameter("mac"); //node mac
 		String dst = null;
 		payload = exchange.getRequestPayload();
-		//System.out.println("PACKET DIM = " + payload.length);
+		
+		System.out.println(">> Source: " + src);
+		
 		packet = new SixLoWPANPacket(payload);
 		
 		byte[] finalAddress = packet.getFinalAddress();
 		if(finalAddress != null){
 	        dst = bytesToHex(finalAddress);
+	        
+	        System.out.println(">> Destination: " + dst);
+	        
 			dijkstra.init(NetworkResource.getGraph());
 			Node source = NetworkResource.getNode(src);
 			Node destination = NetworkResource.getNode(dst);
-			if(source == null || destination == null)
+			
+			if(source == null || destination == null){
+				System.out.println(">> Both source and destination are NULL");
 				return;
-			System.out.println("From: " + src + " to " + dst);
+			}
+			
+			//Compute path with dijkstra and hop count as metric
 			dijkstra.setSource(source);
 			dijkstra.compute();
 			Node nextHop = null;
-			System.out.print("PATH: ");
 			Iterable<Node> path = dijkstra.getPathNodes(destination);
 			for (Node node : path){
-				System.out.print(" -> " + node.getId());
 				if(node.equals(source)){
 					break;
 				}
 				nextHop = node;
 			}
-			System.out.println("");
+
 			if(nextHop != null){
-				System.out.println("Nxt: " + bytesToHex(hexStringToByteArray(nextHop.getId())));
+				System.out.println(">> Next hop: " + bytesToHex(hexStringToByteArray(nextHop.getId())));
 				FlowTable ft = new FlowTable();
-				FlowEntry fe = new FlowEntry(30, 0);
+				FlowEntry fe = new FlowEntry(30, 0); //30 priority, 0 = infinite duration
+				
 				Rule r = new Rule(Fields.MH_DST_ADDR, 0, 64, Operators.EQUAL, packet.getFinalAddress());
 				Action a = new Action(TypeOfAction.FORWARD, Fields.NO_FIELD, 0, 64, hexStringToByteArray(nextHop.getId()));
 				fe.addRule(r);
@@ -91,12 +99,13 @@ public class FlowEngineResourceDijkstra extends CoapResource {
 				try {
 					cborEncoding = ft.toCbor();
 				} catch (CborException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				exchange.respond(ResponseCode.CHANGED, cborEncoding);
-				System.out.println(bytesToHex(cborEncoding));
+				System.out.println(">> Rule added");
 			}
+			else
+				System.out.println(">> No next hop found, waiting for topology update");
 		}
 		exchange.respond(ResponseCode.CHANGED);
 		

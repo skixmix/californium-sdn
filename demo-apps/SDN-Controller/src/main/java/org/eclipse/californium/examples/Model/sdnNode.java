@@ -44,7 +44,11 @@ public class sdnNode {
 		}
 		this.lastUpdate = new Date(System.currentTimeMillis()).getTime();
 		//DEBUG
-		System.out.println(this.lastUpdate + " update: rssi=" + n.rssi + " etx=" + n.etx + " to " + n.getAddress());
+		//System.out.println(this.lastUpdate + " update: rssi=" + n.rssi + " etx=" + n.etx + " to " + n.getAddress());
+	}
+	
+	public void setLastUpdate(){
+		this.lastUpdate = new Date(System.currentTimeMillis()).getTime();
 	}
 	
 	public void setIpAdddress(InetAddress ipAddress){
@@ -107,51 +111,4 @@ public class sdnNode {
 	public String toString() {
 		return this.address;
 	}
-	
-	/*
-	@Override
-	public String toString() {
-		String ret = "sdnNode [address=" + address + ", version=" + version + ", batteryLevel=" + batteryLevel
-				+ ", queueUtilization=" + queueUtilization + ", lastUpdate=" + lastUpdate; 
-		
-		ret += "\nneighbours:";
-		String key;
-        Neighbour n;
-        Enumeration keys = neighbours.keys();
-        while(keys.hasMoreElements()){
-        	key = (String) keys.nextElement();
-        	n = neighbours.get(key);
-        	ret += "\n\t" + key + " rssi=" + n.rssi + " etx=" + n.etx;
-        }
-		ret += "]";
-		return ret;
-	}
-	*/
-
-	public class Neighbour{
-		sdnNode sdnNode;
-		int rssi;
-		int etx;
-
-		public Neighbour(sdnNode n, int rssi, int etx){
-			this.sdnNode = n;
-			this.rssi = rssi;
-			this.etx = etx;
-		}
-		public String getAddress(){
-			return sdnNode.getAddress();
-		}
-
-		public int getRssi() {
-			return rssi;
-		}
-
-		public int getEtx() {
-			return etx;
-		}
-		public sdnNode getNode(){
-			return sdnNode;
-		}
-	}
-
 }

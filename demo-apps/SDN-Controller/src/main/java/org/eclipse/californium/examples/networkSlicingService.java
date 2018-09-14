@@ -107,12 +107,12 @@ public class networkSlicingService extends CoapResource{
 			//Create the multicast tree to reach these nodes
 			nodesTable = networkResource.getNodesTable();
 			sdnNode sink = nodesTable.get("0001000100010001");
-			MulticastTreeGenerator treeGenerator = new MulticastTreeGenerator(sink, nodesTable, ipv6Addresses);
+			//MulticastTreeGenerator treeGenerator = new MulticastTreeGenerator(sink, nodesTable, ipv6Addresses);
 			//Tree<sdnNode> multicastTree = treeGenerator.computeBroadcastTreeTwoSteps();
 			//Tree<sdnNode> multicastTree = treeGenerator.computeMulticastTree();		
-			Tree<sdnNode> multicastTree = treeGenerator.computeSelectiveFloodingTree();
-			sendRulesMulticast(applicationAddress, multicastAddress, multicastTree);
-			sendRulesUnicast(ipv6Addresses, applicationAddress, multicastTree);
+			//Tree<sdnNode> multicastTree = treeGenerator.computeSelectiveFloodingTree();
+			//sendRulesMulticast(applicationAddress, multicastAddress, multicastTree);
+			//sendRulesUnicast(ipv6Addresses, applicationAddress, multicastTree);
 		} catch (Exception e) {
 			e.printStackTrace();
 			exchange.respond(ResponseCode.INTERNAL_SERVER_ERROR);

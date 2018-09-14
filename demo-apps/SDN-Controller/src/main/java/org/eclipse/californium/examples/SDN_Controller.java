@@ -5,6 +5,8 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 
 import org.eclipse.californium.core.CoapResource;
 import org.eclipse.californium.core.CoapServer;
@@ -20,48 +22,44 @@ public class SDN_Controller extends CoapServer {
     /*
      * Application entry point.
      */
-    public static void main(String[] args) {
+	
+    public static void main(String[] args) throws URISyntaxException {
         
         try {
-
             // create server
             SDN_Controller server = new SDN_Controller();
-            // add endpoints on all IP addresses
-            server.addEndpoints();
+            //Server (Controller) address should be off-link, so we use a Global ipv6 address like 2001:0db8:0:f101::1
+            server.addEndpoint(new CoapEndpoint(new InetSocketAddress("2001:0db8:0:f101::1", COAP_PORT)));
+            
             server.start();
+            System.out.println("Controller Started!");
 
         } catch (SocketException e) {
             System.err.println("Failed to initialize server: " + e.getMessage());
         }
     }
 
-    /**
-     * Add individual endpoints listening on default CoAP port on all IPv4 addresses of all network interfaces.
-     */
-    private void addEndpoints() {
-    	for (InetAddress addr : EndpointManager.getEndpointManager().getNetworkInterfaces()) {
-    		//binds to all IPv4 addresses, localhost and IPv6 fd00::1
-			if (addr instanceof Inet4Address || addr instanceof Inet6Address || addr.isLoopbackAddress()) {
-				if(addr.getHostAddress().equals("fd00:0:0:0:0:0:0:1%tun0")){
-					InetSocketAddress bindToAddress = new InetSocketAddress(addr, COAP_PORT);
-					addEndpoint(new CoapEndpoint(bindToAddress));
-				}
-			}
-		}
-    }
 
-    /*
-     * Constructor for a new Hello-World server. Here, the resources
-     * of the server are initialized.
-     */
-    public SDN_Controller() throws SocketException {
-    	CoapResource FlowEngine =  new FlowEngineResourceDijkstra();
-    	//CoapResource FlowEngine =  new FlowEngineResourceBalancedTree();
+    //Constructor for the SDN Controller, here we initialize the available resources
+    public SDN_Controller() throws SocketException, URISyntaxException {
+    	
+    	//The FlowEngine is the one managing flow tables
+    	CoapResource FlowEngine =  new FlowEngineDiProva();
+    	
+    	//The NetworkResource is the one managing topology
     	NetworkResource networkResource = new NetworkResource();
-    	//networkSlicingService slicingService = new networkSlicingService(networkResource);
-    	//add(slicingService);
+    	
+    	//Testing resource for basic communication experiments
+    	//CoapResource TestingEngine = new TestingEngine();
+    	
+    	//Slicing engine
+    	CoapResource SlicingEngine = new SlicingEngine();
+
+    	//Add the resources to the SDN Controller
         add(networkResource);
         add(FlowEngine);
+       // add(TestingEngine);
+        add(SlicingEngine);
     }
 
 }

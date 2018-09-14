@@ -16,7 +16,7 @@ import org.eclipse.californium.examples.Model.SixLoWPANPacket;
 import org.eclipse.californium.examples.Model.Constants.Fields;
 import org.eclipse.californium.examples.Model.Constants.Operators;
 import org.eclipse.californium.examples.Model.Constants.TypeOfAction;
-import org.eclipse.californium.examples.Model.sdnNode.Neighbour;
+import org.eclipse.californium.examples.Model.Neighbour;
 
 import co.nstant.in.cbor.CborException;
 import org.graphstream.algorithm.Dijkstra;

@@ -17,11 +17,12 @@
 package org.eclipse.californium.examples.Topology;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Observable;
 import java.util.Set;
 
 import org.eclipse.californium.examples.Model.sdnNode;
-import org.eclipse.californium.examples.Model.sdnNode.Neighbour;
+import org.eclipse.californium.examples.Model.Neighbour;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
@@ -191,8 +192,9 @@ public class NetworkGraph extends Observable {
                     Node tmp = addNode(neighbourAddress);
                     setupNode(tmp, 0, now, neighbourAddress);
                 }
-
-                int etx = 1;
+                
+                int etx = neighbour.getEtx(); //ETX From node
+                
                 String edgeId = neighbourAddress + "-" + nodeAddr;
                 Edge edge = addEdge(edgeId, neighbourAddress, node.getId(), true);
                 setupEdge(edge, etx);
@@ -211,7 +213,8 @@ public class NetworkGraph extends Observable {
                     setupNode(tmp, 0, now, neighbourAddress);
                 }
 
-                int newEtx = 1;
+                //Same reasoning of path weight here
+                int newEtx =  neighbour.getEtx(); //ETX
 
                 String edgeId = neighbourAddress + "-" + nodeAddr;
                 Edge edge = getEdge(edgeId);
@@ -224,11 +227,14 @@ public class NetworkGraph extends Observable {
                     setupEdge(tmp, newEtx);
                 }
             }
-
+            
+            //Modified by Simone
             if (!oldEdges.isEmpty()) {
-                for(Edge e: (Edge[])oldEdges.toArray()){
-                    removeEdge(e);
-                }
+            	Iterator<Edge> it = oldEdges.iterator();
+            	while(it.hasNext()){
+            		Edge e = it.next();
+            		removeEdge(e);
+            	}
             }
         }
         setChanged();
